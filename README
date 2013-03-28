@@ -1,0 +1,3 @@
+This is a small implementation of policy gradient reinforcement learning for Connect4 in Python.
+
+To experiment, use the main.py and gradient.py entry-points.
