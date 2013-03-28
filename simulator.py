@@ -12,32 +12,12 @@ class Marker(object):
         self.line_counts = dict([(d, 0) for d in Marker.DIRECTIONS])
 
     def __eq__(self, other):
-        return isinstance(other, Marker) and self.ty == other.ty and self.lines == other.lines
+        return isinstance(other, Marker) and self.ty == other.ty and self.line_counts == other.line_counts
 
     def clone(self):
         cpy = Marker(self.ty)
         cpy.line_counts = copy(self.line_counts)
         return cpy
-
-    @property
-    def is_vacant(self):
-        return self.ty == Marker.VACANT
-
-    @classmethod
-    def vacant(cls):
-        return cls(Marker.VACANT)
-
-    @classmethod
-    def red(cls):
-        return cls(Marker.RED)
-
-    @classmethod
-    def black(cls):
-        return cls(Marker.BLACK)
-
-    @classmethod
-    def of_type(cls, to_clone):
-        return cls(to_clone.ty)
 
     def __str__(self):
         if self.ty == Marker.RED:
@@ -58,10 +38,10 @@ class Board(object):
         super(Board, self).__init__()
         self.w = w
         self.h = h
-        self.first_unfilled = dict([(col, 0) for col in range(w)])
-        self.board = [[Marker.vacant() for col in range(w)] for row in range(h)]
+        self.first_unfilled = dict([(col, 0) for col in xrange(w)])
+        self.board = [[Marker(Marker.VACANT) for col in xrange(w)] for row in xrange(h)]
         self.terminal = False
-        self.neighbors = [[[] for col in range(w)] for row in range(h)]
+        self.neighbors = [[[] for col in xrange(w)] for row in xrange(h)]
         self.winner = Marker.VACANT
         deltas = [(-1, 0), (-1, 1), (0, 1), (1, 1), (1, 0), (1, -1), (0, -1), (-1, -1)]
         for row in xrange(self.h):
@@ -73,7 +53,7 @@ class Board(object):
         self.stack = []
 
     def push(self):
-        board_copy = [[self.board[row][col].clone() for col in range(self.w)] for row in range(self.h)]
+        board_copy = [[self.board[row][col].clone() for col in xrange(self.w)] for row in xrange(self.h)]
         self.stack.append((copy(self.first_unfilled), board_copy, self.terminal, self.winner))
 
     def pop(self):
@@ -88,7 +68,7 @@ class Board(object):
             pieces = " ".join(map(str, row))
             return "%i %s" % (idx, pieces)
 
-        row_idxs = " ".join([str(i) for i in range(0, self.w)])
+        row_idxs = " ".join([str(i) for i in xrange(0, self.w)])
         return "\n".join(map(row_repr, reversed(list(enumerate(self.board))))) + "\n  " + row_idxs
 
     def on_board(self, pt):
@@ -110,13 +90,12 @@ class Board(object):
         neg_count = self.line_counts(row - direction[0], col - direction[1], direction, ty)
         return pos_count + neg_count + 1
 
-
     def update_line_counts(self, row, col):
         for direction in Marker.DIRECTIONS:
-            
+
             ty = self.board[row][col].ty
             updated = self.total_line_count(row, col, direction, ty)
-            
+
             self.update_line_counts_in_direction(row, col, direction, updated, 1)
             self.update_line_counts_in_direction(row, col, direction, updated, -1)
             if updated >= Board.WIN_COUNT:
@@ -127,7 +106,7 @@ class Board(object):
         self.board[row][col].line_counts[direction] = updated
         next_row = row + flip*direction[0]
         next_col = col + flip*direction[1]
-        
+
         if self.on_board((next_row, next_col)) and self.board[next_row][next_col].ty == self.board[row][col].ty:
                 self.update_line_counts_in_direction(next_row, next_col, direction, updated, flip)
 
@@ -135,15 +114,19 @@ class Board(object):
         row = self.first_unfilled[col]
         if row is None:
             raise Exception("Attempt to play in filled column.")
-        # place the marker and expand the lines
+
+        # Place the marker and expand the lines.
         new_marker = Marker(color)
         self.board[row][col] = new_marker
         self.update_line_counts(row, col)
-        # keep track of the top of the stacks
+
+        # Keep track of the top of the stacks.
         row += 1
         if row == self.h:
             row = None
         self.first_unfilled[col] = row
+
+        #The game is over if all the stacks are full.
         if len(self.legal_actions) == 0:
             self.terminal = True
 
@@ -152,7 +135,6 @@ if __name__ == '__main__':
     b = Board()
     b.play(0, Marker.BLACK)
     b.play(1, Marker.BLACK)
-    #b.play(1, Marker.BLACK)
     b.play(2, Marker.BLACK)
     b.play(3, Marker.BLACK)
     print b

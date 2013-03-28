@@ -18,7 +18,7 @@ def main():
 
     red_wins = 0
     draws = 0
-    for count in range(games):
+    for count in xrange(games):
         arbiter = Arbiter(red_player(Marker.RED), black_player(Marker.BLACK), Board())
         result = arbiter.run()
         if result == Marker.RED:
