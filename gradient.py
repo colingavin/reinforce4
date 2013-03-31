@@ -15,7 +15,9 @@ def preform_runs(policy, runs):
         if result == Marker.RED:
             total_reward += 1.0
         elif result == Marker.VACANT:
-            total_reward += 0.5
+            total_reward += 0.0
+        else:
+            total_reward -= 1.0
     return total_reward
 
 
